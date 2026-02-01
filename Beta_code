@@ -1,0 +1,189 @@
+import { useState } from 'react';
+import { VideoInput } from '@/app/components/VideoInput';
+import { CareerModePresets, CAREER_PRESETS } from '@/app/components/CareerModePresets';
+import { VideoPlayer } from '@/app/components/VideoPlayer';
+import { SignLanguageAvatar } from '@/app/components/SignLanguageAvatar';
+import { PlayerControls } from '@/app/components/PlayerControls';
+
+// Mock captions data for different career modes
+const MOCK_CAPTIONS = {
+  interview: [
+    { start: 0, end: 3, text: "Hello, thank you for joining us today." },
+    { start: 3, end: 6, text: "Can you tell me about yourself?" },
+    { start: 6, end: 9, text: "What are your key strengths?" },
+    { start: 9, end: 12, text: "Why do you want this position?" },
+    { start: 12, end: 15, text: "Tell me about a challenging project." },
+    { start: 15, end: 18, text: "How do you handle workplace conflicts?" },
+    { start: 18, end: 21, text: "What are your career goals?" },
+    { start: 21, end: 24, text: "Do you have any questions for us?" }
+  ],
+  resume: [
+    { start: 0, end: 3, text: "Start with a strong professional summary." },
+    { start: 3, end: 6, text: "List your work experience in reverse order." },
+    { start: 6, end: 9, text: "Highlight your key achievements." },
+    { start: 9, end: 12, text: "Include relevant skills and certifications." },
+    { start: 12, end: 15, text: "Education should be clearly listed." },
+    { start: 15, end: 18, text: "Use action verbs to describe your work." },
+    { start: 18, end: 21, text: "Keep formatting clean and consistent." },
+    { start: 21, end: 24, text: "Proofread carefully for errors." }
+  ],
+  workplace: [
+    { start: 0, end: 3, text: "Always arrive on time for meetings." },
+    { start: 3, end: 6, text: "Dress appropriately for your workplace." },
+    { start: 6, end: 9, text: "Communicate clearly and professionally." },
+    { start: 9, end: 12, text: "Respect your colleagues' time and space." },
+    { start: 12, end: 15, text: "Take responsibility for your work." },
+    { start: 15, end: 18, text: "Be open to feedback and learning." },
+    { start: 18, end: 21, text: "Maintain a positive attitude." },
+    { start: 21, end: 24, text: "Build good relationships with your team." }
+  ]
+};
+
+export default function App() {
+  const [videoUrl, setVideoUrl] = useState('');
+  const [selectedPresetId, setSelectedPresetId] = useState<string>('');
+  const [captions, setCaptions] = useState<typeof MOCK_CAPTIONS.interview>([]);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [speed, setSpeed] = useState(1);
+  const [showCaptions, setShowCaptions] = useState(true);
+  const [showSignLanguage, setShowSignLanguage] = useState(true);
+  const [currentCaption, setCurrentCaption] = useState('');
+  const [hasVideo, setHasVideo] = useState(false);
+
+  const handleVideoSubmit = (url: string) => {
+    setVideoUrl(url);
+    setHasVideo(true);
+    // Mock caption extraction - in reality, this would call an API
+    setCaptions(MOCK_CAPTIONS.interview);
+    setIsPlaying(false);
+  };
+
+  const handlePresetSelect = (preset: typeof CAREER_PRESETS[0]) => {
+    setSelectedPresetId(preset.id);
+    setVideoUrl(preset.videoUrl);
+    setHasVideo(true);
+    // Load preset-specific captions
+    setCaptions(MOCK_CAPTIONS[preset.id as keyof typeof MOCK_CAPTIONS] || MOCK_CAPTIONS.interview);
+    setIsPlaying(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="text-center space-y-2">
+          <h1 className="text-gray-900">Sign Language Learning Platform</h1>
+          <p className="text-gray-600">Career Mode - Learn professional communication in sign language</p>
+        </div>
+
+        {/* Video Input Section */}
+        {!hasVideo && (
+          <div className="flex flex-col items-center space-y-8">
+            <VideoInput onVideoSubmit={handleVideoSubmit} />
+            
+            <div className="w-full max-w-4xl">
+              <div className="relative py-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300"></div>
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-gradient-to-br from-blue-50 to-purple-50 px-4 text-sm text-gray-500">
+                    or choose a career mode preset
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <CareerModePresets 
+              onPresetSelect={handlePresetSelect}
+              selectedPresetId={selectedPresetId}
+            />
+          </div>
+        )}
+
+        {/* Player Section */}
+        {hasVideo && (
+          <div className="space-y-6">
+            {/* Career Mode Selector */}
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => {
+                  setHasVideo(false);
+                  setIsPlaying(false);
+                  setVideoUrl('');
+                  setSelectedPresetId('');
+                }}
+                className="px-4 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+              >
+                ← Back to selection
+              </button>
+              
+              {selectedPresetId && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm">
+                  <span className="text-sm text-gray-600">Mode:</span>
+                  <span className="text-sm text-gray-900">
+                    {CAREER_PRESETS.find(p => p.id === selectedPresetId)?.title}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Video and Avatar Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Video Player */}
+              <div className="aspect-video">
+                <VideoPlayer
+                  videoUrl={videoUrl}
+                  captions={captions}
+                  isPlaying={isPlaying}
+                  speed={speed}
+                  showCaptions={showCaptions}
+                  onCurrentCaptionChange={setCurrentCaption}
+                />
+              </div>
+
+              {/* Sign Language Avatar */}
+              {showSignLanguage && (
+                <div className="aspect-video">
+                  <SignLanguageAvatar
+                    currentCaption={currentCaption}
+                    isPlaying={isPlaying}
+                  />
+                </div>
+              )}
+
+              {!showSignLanguage && (
+                <div className="aspect-video bg-gray-100 rounded-xl flex items-center justify-center">
+                  <p className="text-gray-500">Sign language display is hidden</p>
+                </div>
+              )}
+            </div>
+
+            {/* Player Controls */}
+            <PlayerControls
+              isPlaying={isPlaying}
+              onPlayPause={() => setIsPlaying(!isPlaying)}
+              speed={speed}
+              onSpeedChange={setSpeed}
+              showCaptions={showCaptions}
+              onToggleCaptions={() => setShowCaptions(!showCaptions)}
+              showSignLanguage={showSignLanguage}
+              onToggleSignLanguage={() => setShowSignLanguage(!showSignLanguage)}
+            />
+
+            {/* Info Panel */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="mb-4 text-gray-900">About This Video</h3>
+              <div className="space-y-2 text-sm text-gray-600">
+                <p>• AI-powered caption extraction from video content</p>
+                <p>• Real-time sign language translation</p>
+                <p>• Adjustable playback speed for better learning</p>
+                <p>• Toggle captions and sign language display as needed</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
